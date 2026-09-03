@@ -1,0 +1,92 @@
+[
+  {
+    "device_id": "DEV-WIN-101",
+    "agent_id": "agent-trmm-001",
+    "hostname": "LAPTOP-SCONNOR-W11",
+    "serial_number": "PF4A9821",
+    "primary_user_upn": "sarah.connor@enterprise.com",
+    "os": "Windows 11 23H2 (Build 22631.3880)",
+    "client": "Enterprise Engineering",
+    "site": "Headquarters",
+    "cpu_pct": 18.5,
+    "ram_pct": 45.2,
+    "disk_free_gb": 312.4,
+    "last_sync_time": "2026-09-01T10:15:00Z",
+    "bitlocker_encrypted": true,
+    "bitlocker_recovery_key_id": "BL-KEY-8812",
+    "bitlocker_recovery_key": "491823-198273-091823-881923-901823-119283-772819-019283",
+    "checks": [
+      { "name": "disk_encryption", "status": "PASS" },
+      { "name": "patch_level", "status": "PASS" },
+      { "name": "antivirus_active", "status": "PASS" }
+    ],
+    "failed_policies": []
+  },
+  {
+    "device_id": "DEV-WIN-102",
+    "agent_id": "agent-trmm-002",
+    "hostname": "LAPTOP-AMURPHY-W11",
+    "serial_number": "PF4B7719",
+    "primary_user_upn": "alex.murphy@enterprise.com",
+    "os": "Windows 11 22H2 (Build 22621.1778)",
+    "client": "Enterprise Engineering",
+    "site": "Remote Operations",
+    "cpu_pct": 89.2,
+    "ram_pct": 92.4,
+    "disk_free_gb": 4.8,
+    "last_sync_time": "2026-08-20T08:00:00Z",
+    "bitlocker_encrypted": false,
+    "bitlocker_recovery_key_id": "BL-KEY-5541",
+    "bitlocker_recovery_key": "123456-789012-345678-901234-567890-123456-789012-345678",
+    "checks": [
+      { "name": "disk_encryption", "status": "FAIL" },
+      { "name": "patch_level", "status": "FAIL" },
+      { "name": "antivirus_active", "status": "PASS" }
+    ],
+    "failed_policies": ["WIN11_SEC_BASELINE_V2", "BITLOCKER_MANDATORY_ENFORCE"]
+  },
+  {
+    "device_id": "DEV-MAC-201",
+    "agent_id": "agent-trmm-003",
+    "hostname": "MACBOOK-EROSTOVA-M3",
+    "serial_number": "C02G89X2MD6R",
+    "primary_user_upn": "elena.rostova@enterprise.com",
+    "os": "macOS 14.5 Sonoma",
+    "client": "Enterprise Design",
+    "site": "Global Design Hub",
+    "cpu_pct": 24.1,
+    "ram_pct": 52.0,
+    "disk_free_gb": 180.2,
+    "last_sync_time": "2026-09-01T12:00:00Z",
+    "bitlocker_encrypted": false,
+    "bitlocker_recovery_key_id": null,
+    "bitlocker_recovery_key": null,
+    "checks": [
+      { "name": "filevault_encryption", "status": "PASS" },
+      { "name": "patch_level", "status": "PASS" }
+    ],
+    "failed_policies": []
+  },
+  {
+    "device_id": "DEV-WIN-103",
+    "agent_id": "agent-trmm-004",
+    "hostname": "LAPTOP-DCHEN-W11",
+    "serial_number": "PF4C3301",
+    "primary_user_upn": "david.chen@enterprise.com",
+    "os": "Windows 11 23H2 (Build 22631.3880)",
+    "client": "Enterprise Engineering",
+    "site": "Tech Center",
+    "cpu_pct": 42.0,
+    "ram_pct": 68.3,
+    "disk_free_gb": 45.0,
+    "last_sync_time": "2026-08-30T14:22:00Z",
+    "bitlocker_encrypted": true,
+    "bitlocker_recovery_key_id": "BL-KEY-9932",
+    "bitlocker_recovery_key": "887766-554433-221100-998877-665544-332211-009988-776655",
+    "checks": [
+      { "name": "disk_encryption", "status": "PASS" },
+      { "name": "patch_level", "status": "FAIL" }
+    ],
+    "failed_policies": ["M365_APP_SECURITY_UPDATE"]
+  }
+]

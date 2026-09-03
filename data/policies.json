@@ -1,0 +1,99 @@
+{
+  "risk_tiers": {
+    "R0": {
+      "name": "Diagnostic Read",
+      "description": "Read-only inspection of telemetry, identity, or asset state.",
+      "requires_human_approval": false,
+      "auto_executable": true
+    },
+    "R1": {
+      "name": "Low-Impact Reversible Write",
+      "description": "Sync triggers, audit notes, ticket updates, local cache cleanups.",
+      "requires_human_approval": false,
+      "auto_executable": true
+    },
+    "R2": {
+      "name": "Standard User Impacting Write",
+      "description": "Adding group memberships, license assignments, device reboots, patches, hardware replacement orders.",
+      "requires_human_approval": true,
+      "approver_roles": ["MANAGER", "IT_DIRECTOR", "SECURITY_ADMIN"],
+      "auto_executable": false
+    },
+    "R3": {
+      "name": "High Privilege / Destructive Action",
+      "description": "SQL transaction log truncation, privileged roles, endpoint isolation, device wipe/retire.",
+      "requires_human_approval": true,
+      "approver_roles": ["LEAD_DBA", "CAB_APPROVER", "SECURITY_ADMIN"],
+      "auto_executable": false
+    },
+    "R4": {
+      "name": "Prohibited Autonomous Action",
+      "description": "Disabling conditional access policies, security perimeter modification.",
+      "requires_human_approval": true,
+      "auto_executable": false
+    }
+  },
+  "action_policies": {
+    "AE_ACC_001_ResolveUser": { "risk_tier": "R0", "approval_required": false },
+    "AE_ACC_002_GetEntitlements": { "risk_tier": "R0", "approval_required": false },
+    "AE_ACC_003_ResolveCatalog": { "risk_tier": "R0", "approval_required": false },
+    "AE_ACC_006_GetApprovalStatus": { "risk_tier": "R0", "approval_required": false },
+    "AE_ACC_011_AddGroupMember": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_ACC_012_AssignAppRole": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_ACC_013_AssignLicense": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_ACC_014_ProvisionSaaS": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_ACC_015_GrantPrivilegedPIM": { "risk_tier": "R3", "approval_required": true, "approver_type": "SECURITY_ADMIN" },
+    "AE_ACC_016_ResetMFA": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_ACC_020_RemoveEntitlement": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_ACC_021_RevokeSessions": { "risk_tier": "R3", "approval_required": true, "approver_type": "SECURITY_ADMIN" },
+    
+    "AE_DEV_001_GetDeviceStatus": { "risk_tier": "R0", "approval_required": false },
+    "AE_DEV_002_GetBitLockerKey": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_DEV_010_TriggerSync": { "risk_tier": "R1", "approval_required": false },
+    "AE_DEV_011_RestartDevice": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_DEV_012_RemediateCompliance": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_DEV_021_RunComplianceCheckScript": { "risk_tier": "R0", "approval_required": false },
+    "AE_DEV_022_ApplyRemediationScript": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    
+    "AE_Get_Endpoint_Metrics_Bot": { "risk_tier": "R0", "approval_required": false },
+    "AE_Kill_Process_Workflow": { "risk_tier": "R1", "approval_required": false },
+    "AE_Restart_Service_Workflow": { "risk_tier": "R1", "approval_required": false },
+    "AE_Fetch_Patch_Package_Bot": { "risk_tier": "R0", "approval_required": false },
+    "AE_Execute_TacticalRMM_Patch_Workflow": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_Verify_Software_Version_Workflow": { "risk_tier": "R0", "approval_required": false },
+    "AE_Disk_Usage_Scanner_Bot": { "risk_tier": "R0", "approval_required": false },
+    "AE_Safe_Temp_Cleanup_Workflow": { "risk_tier": "R1", "approval_required": false },
+    "AE_Archive_User_Folder_Workflow": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_Endpoint_Network_Diag_Bot": { "risk_tier": "R0", "approval_required": false },
+    "AE_Restart_VPN_Daemon_Workflow": { "risk_tier": "R1", "approval_required": false },
+    "AE_Flush_DNS_Test_Ping_Workflow": { "risk_tier": "R1", "approval_required": false },
+
+    "AE_Package_Deployer_Workflow": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_Configure_Local_Policies_Workflow": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_Send_Welcome_Kit_Workflow": { "risk_tier": "R1", "approval_required": false },
+    
+    "AE_Isolate_Endpoint_Workflow": { "risk_tier": "R2", "approval_required": true, "approver_type": "SECURITY_ADMIN" },
+    "AE_Extract_Memory_Forensics_Workflow": { "risk_tier": "R2", "approval_required": true, "approver_type": "SECURITY_ADMIN" },
+    "AE_Update_SIEM_Ticket_Workflow": { "risk_tier": "R1", "approval_required": false },
+    
+    "AE_RMM_Query_Bot": { "risk_tier": "R0", "approval_required": false },
+    "AE_Batch_Script_Runner_Workflow": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_Stream_Execution_Status_Workflow": { "risk_tier": "R0", "approval_required": false },
+    
+    "AE_Collect_Process_Dump_Bot": { "risk_tier": "R0", "approval_required": false },
+    "AE_Restart_AppPool_Workflow": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "AE_Http_Health_Check_Workflow": { "risk_tier": "R0", "approval_required": false },
+    "AE_Scan_DB_Directory_Bot": { "risk_tier": "R0", "approval_required": false },
+    "AE_Backup_SQL_Logs_Workflow": { "risk_tier": "R1", "approval_required": false },
+    "AE_Truncate_SQL_Logs_Workflow": { "risk_tier": "R3", "approval_required": true, "approver_type": "LEAD_DBA" },
+
+    "AE_HW_001_GetAssetDetails": { "risk_tier": "R0", "approval_required": false },
+    "AE_HW_002_CheckWarranty": { "risk_tier": "R0", "approval_required": false },
+    "AE_HW_010_UpdateCIState": { "risk_tier": "R1", "approval_required": false },
+    "AE_HW_020_OrderReplacement": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+
+    "AE_SNOW_001_CreateTicket": { "risk_tier": "R1", "approval_required": false },
+    "AE_SNOW_003_UpdateTicket": { "risk_tier": "R1", "approval_required": false },
+    "AE_NOTIFY_001_SendApprovalEmail": { "risk_tier": "R1", "approval_required": false }
+  }
+}

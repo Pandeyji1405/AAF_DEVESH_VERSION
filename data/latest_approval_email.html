@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Action Required: IT Approval Request</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; padding: 24px; }
+    .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; max-width: 620px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .header { border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-bottom: 18px; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 12px; background: #e0f2fe; color: #0369a1; text-transform: uppercase; }
+    .btn { display: inline-block; padding: 12px 26px; border-radius: 6px; font-weight: 600; text-decoration: none; text-align: center; margin-right: 12px; font-size: 14px; }
+    .btn-approve { background: #16a34a; color: #ffffff !important; }
+    .btn-reject { background: #dc2626; color: #ffffff !important; }
+    .meta-table { width: 100%; border-collapse: collapse; margin: 18px 0; }
+    .meta-table td { padding: 9px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+    .meta-table td.label { font-weight: 600; color: #64748b; width: 32%; }
+    .instructions { background: #f8fafc; border-left: 4px solid #3b82f6; padding: 12px 16px; margin-top: 20px; font-size: 13px; color: #334155; }
+    .footer { font-size: 11px; color: #94a3b8; margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span class="badge">Tier R2 Governance Authorization</span>
+      <h2 style="margin: 8px 0 0 0; color: #0f172a;">IT Action Approval Required</h2>
+    </div>
+    
+    <p>Hello,</p>
+    <p>An automated remediation or enterprise access action requires your line manager authorization under <strong>Ticket INC-938E2D67</strong>.</p>
+    
+    <table class="meta-table">
+      <tr><td class="label">Requester:</td><td>alex.murphy@enterprise.com</td></tr>
+      <tr><td class="label">Action:</td><td><code>AE_ACC_011_AddGroupMember</code></td></tr>
+      <tr><td class="label">Target Resource:</td><td><strong>Enterprise Application Access (GRP-GENERIC)</strong></td></tr>
+      <tr><td class="label">Business Reason:</td><td>Provision access to Enterprise Application Access requested by alex.murphy@enterprise.com</td></tr>
+      <tr><td class="label">Approval ID:</td><td><code>APPR-15375C64</code></td></tr>
+    </table>
+    
+    <div style="margin: 28px 0;">
+      <a href="http://172.16.1.21:8000/approval/decision?approval_id=APPR-15375C64&decision=approve&expiry=1788694917&sig=9a9a7c71f3f36ee03813a4ded074877ac8f56e6c78cc627d4338fb3f0a0dca9e" class="btn btn-approve" target="_blank">✅ Approve Action</a>
+      <a href="http://172.16.1.21:8000/approval/decision?approval_id=APPR-15375C64&decision=reject&expiry=1788694917&sig=df30a3610f42e15befbfc9762e497b0f44b642ba72aac48a332a872469627caf" class="btn btn-reject" target="_blank">❌ Reject Request</a>
+    </div>
+    
+    <div class="instructions">
+      <strong>💬 Or reply directly to this email:</strong><br>
+      You can reply in free text (e.g. <em>"Approved, please proceed"</em> or <em>"Approved and submit laptop to it team"</em> or <em>"Rejected: out of budget"</em>).
+      Our Autonomous Agent reads your reply in real-time and updates ServiceNow.
+    </div>
+    
+    <div class="footer">
+      Audit Ref: APPR-15375C64 | Security Hash Protected
+      <span style="display:none !important; color:transparent; font-size:1px;">[[REF:6dcec8342ab942a8]]</span>
+    </div>
+  </div>
+</body>
+</html>

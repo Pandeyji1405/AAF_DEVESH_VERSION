@@ -1,0 +1,67 @@
+[
+  {
+    "user_id": "USR-1001",
+    "email": "sarah.connor@enterprise.com",
+    "user_principal_name": "sarah.connor@enterprise.com",
+    "display_name": "Sarah Connor",
+    "job_title": "Senior Security Engineer",
+    "department": "Cybersecurity",
+    "manager_email": "john.anderson@enterprise.com",
+    "account_status": "ACTIVE",
+    "assigned_device_id": "DEV-WIN-101",
+    "assigned_groups": ["GRP-SEC-OPS", "GRP-ALL-EMPLOYEES", "GRP-VPN-USERS"],
+    "assigned_licenses": ["M365-E5-SEC", "GH-ENT-01"]
+  },
+  {
+    "user_id": "USR-1002",
+    "email": "alex.murphy@enterprise.com",
+    "user_principal_name": "alex.murphy@enterprise.com",
+    "display_name": "Alex Murphy",
+    "job_title": "Field Operations Specialist",
+    "department": "Operations",
+    "manager_email": "sarah.connor@enterprise.com",
+    "account_status": "ACTIVE",
+    "assigned_device_id": "DEV-WIN-102",
+    "assigned_groups": ["GRP-OPS-FIELD", "GRP-ALL-EMPLOYEES"],
+    "assigned_licenses": ["M365-E3-BASE"]
+  },
+  {
+    "user_id": "USR-1003",
+    "email": "elena.rostova@enterprise.com",
+    "user_principal_name": "elena.rostova@enterprise.com",
+    "display_name": "Elena Rostova",
+    "job_title": "Lead DevOps Engineer",
+    "department": "Cloud Platform",
+    "manager_email": "sarah.connor@enterprise.com",
+    "account_status": "ACTIVE",
+    "assigned_device_id": "DEV-MAC-201",
+    "assigned_groups": ["GRP-DEV-TEAM", "GRP-ALL-EMPLOYEES", "GRP-AWS-READONLY"],
+    "assigned_licenses": ["M365-E5-BASE", "GH-ENT-01", "SLACK-PRO-01"]
+  },
+  {
+    "user_id": "USR-1004",
+    "email": "david.chen@enterprise.com",
+    "user_principal_name": "david.chen@enterprise.com",
+    "display_name": "David Chen",
+    "job_title": "Account Executive",
+    "department": "Sales",
+    "manager_email": "john.anderson@enterprise.com",
+    "account_status": "ACTIVE",
+    "assigned_device_id": "DEV-WIN-103",
+    "assigned_groups": ["GRP-SALES-ALL", "GRP-ALL-EMPLOYEES"],
+    "assigned_licenses": ["M365-E3-BASE", "SF-CRM-01"]
+  },
+  {
+    "user_id": "USR-1005",
+    "email": "john.anderson@enterprise.com",
+    "user_principal_name": "john.anderson@enterprise.com",
+    "display_name": "John Anderson",
+    "job_title": "VP of Engineering & IT",
+    "department": "Executive IT",
+    "manager_email": "ceo@enterprise.com",
+    "account_status": "ACTIVE",
+    "assigned_device_id": "DEV-MAC-202",
+    "assigned_groups": ["GRP-IT-LEADERSHIP", "GRP-ALL-EMPLOYEES", "GRP-CAB-APPROVERS"],
+    "assigned_licenses": ["M365-E5-SEC", "SF-CRM-01", "GH-ENT-01"]
+  }
+]

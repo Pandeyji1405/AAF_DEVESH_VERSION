@@ -1,0 +1,101 @@
+[
+  {
+    "catalog_item_id": "CAT-ACC-001",
+    "friendly_name": "Salesforce CRM - Standard User",
+    "alias_keywords": ["salesforce", "sf", "crm", "salesforce crm"],
+    "type": "LICENSE",
+    "target_object_id": "SF-CRM-01",
+    "risk_tier": "R2",
+    "approval_required": true,
+    "approver_role": "MANAGER",
+    "description": "Standard Salesforce CRM sales license"
+  },
+  {
+    "catalog_item_id": "CAT-ACC-002",
+    "friendly_name": "GitHub Enterprise - Developer Access",
+    "alias_keywords": ["github", "github enterprise", "gh", "git", "repo", "repository", "payments"],
+    "type": "GROUP",
+    "target_object_id": "GRP-DEV-TEAM",
+    "risk_tier": "R2",
+    "approval_required": true,
+    "approver_role": "MANAGER",
+    "description": "GitHub Enterprise development team repository access"
+  },
+  {
+    "catalog_item_id": "CAT-ACC-003",
+    "friendly_name": "Corporate VPN Access",
+    "alias_keywords": ["vpn", "remote access vpn", "cisco vpn", "corporate vpn"],
+    "type": "GROUP",
+    "target_object_id": "GRP-VPN-USERS",
+    "risk_tier": "R1",
+    "approval_required": false,
+    "approver_role": "AUTO",
+    "description": "Standard pre-approved corporate VPN access"
+  },
+  {
+    "catalog_item_id": "CAT-ACC-004",
+    "friendly_name": "Microsoft 365 E5 Security Add-on",
+    "alias_keywords": ["m365 e5", "e5 license", "security license", "office 365", "m365", "copilot"],
+    "type": "LICENSE",
+    "target_object_id": "M365-E5-SEC",
+    "risk_tier": "R2",
+    "approval_required": true,
+    "approver_role": "IT_DIRECTOR",
+    "description": "Advanced M365 security & compliance license"
+  },
+  {
+    "catalog_item_id": "CAT-ACC-005",
+    "friendly_name": "AWS Cloud Administrator Role",
+    "alias_keywords": ["aws admin", "aws privileged", "cloud admin", "aws", "azure"],
+    "type": "ROLE",
+    "target_object_id": "ROLE-AWS-ADMIN",
+    "risk_tier": "R3",
+    "approval_required": true,
+    "approver_role": "CAB_APPROVER",
+    "description": "Elevated privileged cloud administrator access"
+  },
+  {
+    "catalog_item_id": "CAT-ACC-006",
+    "friendly_name": "Figma Enterprise Design Workspace",
+    "alias_keywords": ["figma", "design", "ui", "ux", "wireframe"],
+    "type": "LICENSE",
+    "target_object_id": "FIGMA-PRO-01",
+    "risk_tier": "R2",
+    "approval_required": true,
+    "approver_role": "MANAGER",
+    "description": "Enterprise Figma design seat"
+  },
+  {
+    "catalog_item_id": "CAT-ACC-007",
+    "friendly_name": "Jira & Confluence Product Suite",
+    "alias_keywords": ["jira", "confluence", "atlassian", "sprint"],
+    "type": "GROUP",
+    "target_object_id": "GRP-ATLASSIAN-USERS",
+    "risk_tier": "R2",
+    "approval_required": true,
+    "approver_role": "MANAGER",
+    "description": "Atlassian Jira and Confluence standard project access"
+  },
+  {
+    "catalog_item_id": "CAT-ACC-008",
+    "friendly_name": "Power BI Pro Analytics",
+    "alias_keywords": ["power bi", "powerbi", "bi", "analytics", "dashboard"],
+    "type": "LICENSE",
+    "target_object_id": "PBI-PRO-01",
+    "risk_tier": "R2",
+    "approval_required": true,
+    "approver_role": "MANAGER",
+    "description": "Power BI Pro user license for reports and dashboards"
+  },
+  {
+    "catalog_item_id": "CAT-ACC-009",
+    "friendly_name": "Snowflake Data Warehouse Analyst",
+    "alias_keywords": ["snowflake", "data warehouse", "sql", "databricks"],
+    "type": "ROLE",
+    "target_object_id": "ROLE-SNOWFLAKE-ANALYST",
+    "risk_tier": "R2",
+    "approval_required": true,
+    "approver_role": "MANAGER",
+    "description": "Snowflake analytics query access"
+  }
+]

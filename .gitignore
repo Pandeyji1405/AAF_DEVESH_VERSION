@@ -1,0 +1,20 @@
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment Variables
+.env
+
+# Testing & Virtual Environment
+.pytest_cache/
+.hypothesis/
+env/
+venv/
+.venv/
+
+# IDE files
+.vscode/
+.idea/
+*.swp

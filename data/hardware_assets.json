@@ -1,0 +1,62 @@
+[
+  {
+    "ci_id": "CI-HW-5001",
+    "asset_tag": "ASSET-L-101",
+    "serial_number": "PF4A9821",
+    "device_name": "LAPTOP-SCONNOR-W11",
+    "model_name": "ThinkPad T14s Gen 4",
+    "manufacturer": "Lenovo",
+    "assigned_user_id": "USR-1001",
+    "assigned_user_email": "sarah.connor@enterprise.com",
+    "install_status": "Installed / In Use",
+    "warranty_status": "Active",
+    "warranty_expiry": "2027-12-31",
+    "purchase_date": "2024-01-15",
+    "condition": "Good"
+  },
+  {
+    "ci_id": "CI-HW-5002",
+    "asset_tag": "ASSET-L-102",
+    "serial_number": "PF4B7719",
+    "device_name": "LAPTOP-AMURPHY-W11",
+    "model_name": "ThinkPad X1 Carbon Gen 11",
+    "manufacturer": "Lenovo",
+    "assigned_user_id": "USR-1002",
+    "assigned_user_email": "alex.murphy@enterprise.com",
+    "install_status": "Installed / In Use",
+    "warranty_status": "Active",
+    "warranty_expiry": "2026-11-30",
+    "purchase_date": "2023-11-15",
+    "condition": "Screen Damaged / Keyboard Fault"
+  },
+  {
+    "ci_id": "CI-HW-5003",
+    "asset_tag": "ASSET-L-201",
+    "serial_number": "C02G89X2MD6R",
+    "device_name": "MACBOOK-EROSTOVA-M3",
+    "model_name": "MacBook Pro 16-inch M3 Pro",
+    "manufacturer": "Apple",
+    "assigned_user_id": "USR-1003",
+    "assigned_user_email": "elena.rostova@enterprise.com",
+    "install_status": "Installed / In Use",
+    "warranty_status": "Active",
+    "warranty_expiry": "2027-03-31",
+    "purchase_date": "2024-03-20",
+    "condition": "Good"
+  },
+  {
+    "ci_id": "CI-HW-5004",
+    "asset_tag": "ASSET-D-301",
+    "serial_number": "DK99102X",
+    "device_name": "DOCK-USB4-GEN2",
+    "model_name": "Thunderbolt 4 Workstation Dock",
+    "manufacturer": "Lenovo",
+    "assigned_user_id": "USR-1001",
+    "assigned_user_email": "sarah.connor@enterprise.com",
+    "install_status": "Installed / In Use",
+    "warranty_status": "Active",
+    "warranty_expiry": "2026-08-15",
+    "purchase_date": "2023-08-15",
+    "condition": "Faulty Power Connector"
+  }
+]

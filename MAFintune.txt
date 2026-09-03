@@ -1,0 +1,153 @@
+
+AI Agents — where reasoning is required
+MAF Case Manager      → AI Agent
+Device Ops Specialist → AI Agent
+Access Specialist     → AI Agent
+Hardware Specialist   → AI Agent
+
+2. Normal deterministic workflow — where reasoning is NOT required
+Check permission       → Normal workflow
+Get approval status    → Normal workflow
+Execute approved tool  → Normal workflow
+Verify result          → Normal workflow
+Write audit record     → Normal workflow
+
+
+MAF Case Manager
+       ↓
+chooses Device Ops Specialist
+       ↓
+Device Ops Specialist
+       │
+       ├── Gather information
+       │
+       └── Create a plan
+               ↓
+        Policy / Approval
+               ↓
+        AutomationEdge (responsible to execute the specific tasks which our Device ops specialist decide)
+
+
+Case Manager = Which specialist should handle this?
+Device Ops Specialist = What is happening, and what approved action should we take?
+Policy = Are we allowed to take that action?
+AutomationEdge = Execute the approved action.
+
+Device Specialist decides WHAT should be done.
+Policy decides WHETHER it is allowed.
+AutomationEdge actually DOES it.
+
+Risk level → defined in the tool catalog
+Permission/approval → evaluated by the Policy Decision Point
+AI agent → proposes/selects the action
+AutomationEdge → executes only after authorization
+
+Device Ops Specialist
+        ↓
+Gather evidence
+        ↓
+Select approved action
+        ↓
+        ┌─────────────────────┐
+        │ Policy Decision     │
+        │ Point (PDP)         │
+        └─────────────────────┘
+        ↓
+Allowed / Approval Required / Denied
+        ↓
+AutomationEdge
+        ↓
+Execute
+
+Device Ops Specialist (AI)
+→ Understands the device problem
+→ Gathers information
+→ Creates the remediation plan
+→ Selects the approved tool/action.
+
+Tool Metadata
+→ Defines the action's risk tier and required approval type.
+
+Policy Decision Point (normal deterministic component, NOT AI)
+→ Checks whether that action is actually allowed for this requester, target, scope, risk, approval, maintenance window, etc.
+
+AutomationEdge
+→ Executes the action only after it is authorized.
+
+
+
+Device Ops AI
+    ↓
+Selects: device.restart
+    ↓
+Tool metadata
+    ↓
+Risk = R2
+    ↓
+Policy Decision Point
+    ↓
+"Does this user/device have permission?
+ Is confirmation required?"
+    ↓
+Approved ✅
+    ↓
+AutomationEdge
+    ↓
+Restart laptop
+
+
+Device Ops Specialist
+        ↓
+Proposed action:
+device.restart
+        ↓
+Tool metadata
+Risk = R2
+        ↓
+  PDP (Policy Decision Point)
+        ↓
+Check:
+✓ Who requested it?
+✓ Which device?
+✓ Is this action allowed?
+✓ Is the device in allowed scope?
+✓ Is approval required?
+✓ Is maintenance window satisfied?
+        	↓
+ ┌──────────┼──────────┐
+ ↓          	↓             ↓
+ALLOW        APPROVAL	    DENY
+              NEEDED
+
+
+Entra ID
+   ↓
+WHO is the user?
+WHO is the device?
+
+Intune / SCCM
+   ↓
+HOW do we manage the device?
+
+SaaS
+   ↓
+WHICH external application/service
+are we managing?
+
+
+
+1. Receive request
+2. Identify user
+3. Identify target
+4. Understand intent
+5. Gather evidence
+6. Create plan
+7. Check policy
+8. Get approval when needed
+9. Call approved AutomationEdge workflow
+10. Wait for result
+11. Verify actual system state
+12. Update ServiceNow
+13. Tell the user what happened
+
+
