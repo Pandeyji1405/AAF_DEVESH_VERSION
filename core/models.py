@@ -130,4 +130,6 @@ class IncidentTicket(BaseModel):
     actions_executed: List[ProposedAction] = Field(default_factory=list)
     verification: Optional[VerificationResult] = None
     final_resolution: Optional[str] = None
+    resolution_code: Optional[str] = None
+    sys_id: Optional[str] = None
     customer_summary: Optional[str] = None

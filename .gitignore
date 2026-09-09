@@ -18,3 +18,7 @@ venv/
 .vscode/
 .idea/
 *.swp
+
+# SQLite runtime DBs & generated artifacts
+*.db
+data/latest_approval_email.html

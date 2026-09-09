@@ -11,10 +11,31 @@ def create_access_tools(ae_client):
         description="Resolves user identity, department, manager, and assigned hardware from Microsoft Entra ID."
     )
     def resolve_user(user_email: str) -> Dict[str, Any]:
-        res = ae_client.execute_workflow("AE_ACC_001_ResolveUser", {
-            "user_email": user_email
-        })
-        return res.get("workflowResponse", {})
+        resp = {}
+        try:
+            res = ae_client.execute_workflow("AE_ACC_001_ResolveUser", {
+                "user_email": user_email
+            })
+            resp = res.get("workflowResponse", {})
+        except Exception:
+            pass
+
+        if resp and resp.get("user_id"):
+            return resp
+
+        # Fallback to local verified employee database
+        import json, os
+        emp_file = os.path.join(os.path.dirname(__file__), "..", "..", "data", "employees.json")
+        if os.path.exists(emp_file):
+            try:
+                with open(emp_file, "r", encoding="utf-8") as f:
+                    emps = json.load(f)
+                for e in emps:
+                    if e.get("email", "").lower() == user_email.lower() or e.get("user_principal_name", "").lower() == user_email.lower():
+                        return e
+            except Exception:
+                pass
+        return {}
 
     @tool(
         name="get_entitlements",

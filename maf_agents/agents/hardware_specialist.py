@@ -5,7 +5,7 @@ from core.context_graph import ContextGraph
 from core.base_agent import BaseAgent
 
 from maf_agents.tools.hardware_tools import create_hardware_tools
-from maf_agents.tools.servicenow_tools import create_servicenow_tools
+from maf_agents.tools.itsm_tools import create_itsm_tools
 from maf_agents.client_factory import get_maf_chat_client
 
 class MAFHardwareAgent(BaseAgent):
@@ -17,7 +17,8 @@ class MAFHardwareAgent(BaseAgent):
     def __init__(self, ae_client, policy_engine, hitl_manager):
         super().__init__("MAF_Hardware_Agent", ae_client, policy_engine, hitl_manager)
         self.hardware_tools = {t.name: t for t in create_hardware_tools(ae_client)}
-        self.snow_tools = {t.name: t for t in create_servicenow_tools(ae_client)}
+        self.snow_tools = {t.name: t for t in create_itsm_tools(ae_client)}
+        self.itsm_tools = self.snow_tools
 
         # Instantiate Microsoft Agent Framework Agent
         self.maf_agent = Agent(
@@ -69,7 +70,7 @@ class MAFHardwareAgent(BaseAgent):
 
         if approval_record.status == ApprovalStatus.APPROVED:
             context_graph.validate_action_parameters("AE_HW_020_OrderReplacement", params)
-            app_dict = approval_record.dict() if hasattr(approval_record, "dict") else approval_record.model_dump()
+            app_dict = approval_record.model_dump() if hasattr(approval_record, "model_dump") else approval_record.dict()
             decision = self.policy_engine.evaluate("AE_HW_020_OrderReplacement", params, app_dict)
             if decision["decision"] == "DENY":
                 raise PermissionError(f"PDP denied AE_HW_020_OrderReplacement: {decision.get('reason')}")

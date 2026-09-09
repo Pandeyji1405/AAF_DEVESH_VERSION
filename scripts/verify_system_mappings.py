@@ -60,10 +60,9 @@ def run_mapping_audit():
     uq = UserQuery(query_text="I dropped my laptop and screen cracked", requester_email="alex.murphy@enterprise.com")
     ticket, graph = case_mgr.process_incoming_query(uq)
     
-    facts = graph.facts
-    print(f"  ✅ User Identity : {facts.get('requester_email')} (Manager: {facts.get('manager_email')})")
-    print(f"  ✅ Device Corrob : {facts.get('assigned_device_id')} / {facts.get('device_name')}")
-    print(f"  ✅ Asset Tag     : {facts.get('asset_tag')} (Serial: {facts.get('serial_number')})")
+    print(f"  ✅ User Identity : {graph.get_fact('requester_email')} (Manager: {graph.get_fact('manager_email')})")
+    print(f"  ✅ Device Corrob : {graph.get_fact('assigned_device_id')} / {graph.get_fact('device_name')}")
+    print(f"  ✅ Asset Tag     : {graph.get_fact('asset_tag')} (Serial: {graph.get_fact('serial_number')})")
     print(f"  ✅ Zero-Hallucination Status : PASS (Facts verified against CMDB/Entra ID)")
 
     # 3. Verify AutomationEdge Workflow Registry Coverage

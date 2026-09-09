@@ -94,6 +94,23 @@
 
     "AE_SNOW_001_CreateTicket": { "risk_tier": "R1", "approval_required": false },
     "AE_SNOW_003_UpdateTicket": { "risk_tier": "R1", "approval_required": false },
-    "AE_NOTIFY_001_SendApprovalEmail": { "risk_tier": "R1", "approval_required": false }
+    "AE_NOTIFY_001_SendApprovalEmail": { "risk_tier": "R1", "approval_required": false },
+
+    "Get_Machine_Summary": { "risk_tier": "R0", "approval_required": false },
+    "Get_Agents_List": { "risk_tier": "R0", "approval_required": false },
+    "Get_Software_List": { "risk_tier": "R0", "approval_required": false },
+    "Get_Windows_Patches": { "risk_tier": "R0", "approval_required": false },
+    "Software_Installation": { "risk_tier": "R2", "approval_required": true, "approver_type": "MANAGER" },
+    "Get_Agent_Run_Cmd": { "risk_tier": "R0", "approval_required": false },
+    "TRMM_Run_IP_Config": { "risk_tier": "R0", "approval_required": false },
+    "Servicenow_Incident_Creation": { "risk_tier": "R1", "approval_required": false },
+    "ServiceNow_Update_Incident": { "risk_tier": "R1", "approval_required": false },
+    "ConnectWise_Create_Ticket": { "risk_tier": "R1", "approval_required": false },
+    "ConnectWise_Get_Tickets": { "risk_tier": "R0", "approval_required": false },
+    "ConnectWise_Update_Ticket": { "risk_tier": "R1", "approval_required": false },
+    "Create_Incident_In_Jira": { "risk_tier": "R1", "approval_required": false },
+    "Update_Jira_Incident": { "risk_tier": "R1", "approval_required": false },
+    "Automated_Email_Fetching": { "risk_tier": "R0", "approval_required": false },
+    "Send_Email": { "risk_tier": "R1", "approval_required": false }
   }
 }

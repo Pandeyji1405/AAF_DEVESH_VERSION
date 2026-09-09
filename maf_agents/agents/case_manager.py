@@ -9,13 +9,13 @@ from core.nlu import NaturalLanguageUnderstander
 
 from maf_agents.tools.access_tools import create_access_tools
 from maf_agents.tools.tacticalrmm_tools import create_tacticalrmm_tools
-from maf_agents.tools.servicenow_tools import create_servicenow_tools
+from maf_agents.tools.itsm_tools import create_itsm_tools, get_active_itsm_connector_name
 from maf_agents.client_factory import get_maf_chat_client
 
 class MAFCaseManagerAgent:
     """
     Microsoft Agent Framework (MAF): Case Manager & Triage Agent.
-    Coordinates incident intake, entity resolution, and ServiceNow ticket creation
+    Coordinates incident intake, entity resolution, and ServiceNow incident creation
     using agent_framework.Agent and Google Gemini API.
     """
 
@@ -27,7 +27,8 @@ class MAFCaseManagerAgent:
         self.chat_client = get_maf_chat_client()
         self.access_tools = {t.name: t for t in create_access_tools(ae_client)}
         self.device_tools = {t.name: t for t in create_tacticalrmm_tools(ae_client)}
-        self.snow_tools = {t.name: t for t in create_servicenow_tools(ae_client)}
+        self.snow_tools = {t.name: t for t in create_itsm_tools(ae_client)}
+        self.itsm_tools = self.snow_tools
 
         self.maf_agent = Agent(
             client=self.chat_client,
@@ -103,33 +104,54 @@ class MAFCaseManagerAgent:
         if assigned_device_id:
             context_graph.add_fact("assigned_device_id", assigned_device_id, source="MICROSOFT_ENTRA_ID")
             # Map assigned device to TacticalRMM agent_id
-            agent_id = "agent-trmm-001" if "101" in assigned_device_id else ("agent-trmm-002" if "102" in assigned_device_id else "agent-trmm-004")
+            if "APOORVA" in assigned_device_id.upper() or "apoorva" in str(user_query.requester_email).lower():
+                agent_id = "zAltxZhbdHrygGpGRhnwqGSbOLSHozfDAZOTntXu"
+                hostname = "Apoorva"
+            elif "101" in assigned_device_id:
+                agent_id = "agent-trmm-001"
+                hostname = "LAPTOP-SCONNOR-W11"
+            elif "102" in assigned_device_id:
+                agent_id = "agent-trmm-002"
+                hostname = "LAPTOP-AMURPHY-W11"
+            else:
+                agent_id = "agent-trmm-004"
+                hostname = "LAPTOP-DCHEN-W11"
+
             context_graph.add_fact("agent_id", agent_id, source="TACTICAL_RMM")
+            context_graph.add_fact("device_name", hostname)
+            context_graph.add_fact("hostname", hostname)
             try:
                 metrics = self.device_tools["get_endpoint_metrics"](agent_id=agent_id)
                 context_graph.add_entity("devices", assigned_device_id, metrics)
-                context_graph.add_fact("device_name", metrics.get("hostname", assigned_device_id))
             except Exception:
                 pass
 
-        # 4. Create Official ServiceNow Incident Ticket via MAF tool
-        tkt_data = self.snow_tools["create_incident"](
-            requester_email=user_query.requester_email,
-            short_description=user_query.query_text[:80],
-            description=user_query.query_text,
-            category=intent.value,
-            urgency="Medium"
-        )
-        ticket_number = tkt_data.get("ticket_id") or tkt_data.get("number") or tkt_data.get("ticket_number") or f"INC-{user_query.timestamp.strftime('%Y%m%d%H%M')}"
+        # 4. Register or create Official ITSM Incident Ticket via MAF tool
+        conn_name = get_active_itsm_connector_name()
+        if getattr(user_query, "ticket_id", None):
+            ticket_number = user_query.ticket_id
+            tkt_data = {"ticket_id": ticket_number, "number": ticket_number}
+        else:
+            tkt_data = self.snow_tools["create_incident"](
+                requester_email=user_query.requester_email,
+                short_description=user_query.query_text[:80],
+                description=user_query.query_text,
+                category=intent.value,
+                urgency="Medium"
+            )
+            ticket_number = tkt_data.get("ticket_id") or tkt_data.get("number") or tkt_data.get("ticket_number") or f"INC-{user_query.timestamp.strftime('%Y%m%d%H%M')}"
+        
         context_graph.ticket_id = ticket_number
-        context_graph.add_fact("ticket_id", ticket_number, source="SERVICENOW_MAF")
+        context_graph.add_fact("ticket_id", ticket_number, source=f"{conn_name}_MAF")
         if tkt_data.get("sys_id"):
-            context_graph.add_fact("servicenow_sys_id", tkt_data.get("sys_id"), source="SERVICENOW_TABLE_API")
-        context_graph.add_fact("servicenow_payload", tkt_data, source="SERVICENOW_TABLE_API")
+            context_graph.add_fact("itsm_sys_id", tkt_data.get("sys_id"), source=f"{conn_name}_API")
+            context_graph.add_fact("servicenow_sys_id", tkt_data.get("sys_id"), source=f"{conn_name}_API")
+        context_graph.add_fact("itsm_payload", tkt_data, source=f"{conn_name}_API")
 
         assigned_agent = f"MAF_{intent.value.title()}_Specialist_Agent"
         ticket = IncidentTicket(
             ticket_id=ticket_number,
+            sys_id=tkt_data.get("sys_id"),
             requester_email=user_query.requester_email,
             intent=intent,
             assigned_agent=assigned_agent,

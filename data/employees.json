@@ -63,5 +63,18 @@
     "assigned_device_id": "DEV-MAC-202",
     "assigned_groups": ["GRP-IT-LEADERSHIP", "GRP-ALL-EMPLOYEES", "GRP-CAB-APPROVERS"],
     "assigned_licenses": ["M365-E5-SEC", "SF-CRM-01", "GH-ENT-01"]
+  },
+  {
+    "user_id": "USR-2001",
+    "email": "apoorva.giri@enterprise.com",
+    "user_principal_name": "apoorva.giri@enterprise.com",
+    "display_name": "Apoorva Giri",
+    "job_title": "Lead IT Systems Specialist",
+    "department": "IT Operations",
+    "manager_email": "devesh.pandey1405@gmail.com",
+    "account_status": "ACTIVE",
+    "assigned_device_id": "DEV-WIN-APOORVA",
+    "assigned_groups": ["GRP-IT-OPERATIONS", "GRP-ALL-EMPLOYEES", "GRP-VPN-USERS", "GRP-DEVICE-ADMINS"],
+    "assigned_licenses": ["M365-E5-SEC", "GH-ENT-01", "TACTICAL-RMM-PRO"]
   }
 ]

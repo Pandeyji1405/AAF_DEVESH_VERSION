@@ -88,5 +88,28 @@
       { "name": "patch_level", "status": "FAIL" }
     ],
     "failed_policies": ["M365_APP_SECURITY_UPDATE"]
+  },
+  {
+    "device_id": "DEV-WIN-APOORVA",
+    "agent_id": "zAltxZhbdHrygGpGRhnwqGSbOLSHozfDAZOTntXu",
+    "hostname": "Apoorva",
+    "serial_number": "TRMM-APOORVA-001",
+    "primary_user_upn": "apoorva.giri@enterprise.com",
+    "os": "Windows 11 Enterprise (Build 22631.4317)",
+    "client": "Enterprise IT",
+    "site": "Production Operations",
+    "cpu_pct": 22.4,
+    "ram_pct": 54.1,
+    "disk_free_gb": 248.6,
+    "last_sync_time": "2026-09-07T10:00:00Z",
+    "bitlocker_encrypted": true,
+    "bitlocker_recovery_key_id": "BL-KEY-APOORVA-99",
+    "bitlocker_recovery_key": "112233-445566-778899-001122-334455-667788-990011-223344",
+    "checks": [
+      { "name": "disk_encryption", "status": "PASS" },
+      { "name": "patch_level", "status": "PASS" },
+      { "name": "antivirus_active", "status": "PASS" }
+    ],
+    "failed_policies": []
   }
 ]

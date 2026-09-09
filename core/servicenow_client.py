@@ -167,18 +167,25 @@ class ServiceNowClient:
             "Closed Rejected": "8",
             "Rejected": "8"
         }
-        snow_state = state_code_map.get(state, "2")
+        # Map close code to valid ServiceNow Data Policy choices
+        valid_close_code = "Solution provided"
+        if "reject" in state.lower() or "reject" in resolution_code.lower():
+            valid_close_code = "Resolved by caller"
+        elif "workaround" in resolution_code.lower():
+            valid_close_code = "Workaround provided"
 
         payload = {
-            "state": snow_state
+            "state": snow_state,
+            "incident_state": snow_state
         }
         if work_notes:
             payload["work_notes"] = work_notes
         if customer_summary:
-            payload["comments"] = customer_summary
-        if resolution_code:
-            payload["close_code"] = resolution_code
-            payload["close_notes"] = customer_summary or f"Resolved with code: {resolution_code}"
+            payload["comments"] = f"Autonomous IT Service Desk Resolution:\n\n{customer_summary}"
+        
+        if snow_state in ["6", "7", "8"]:
+            payload["close_code"] = valid_close_code
+            payload["close_notes"] = customer_summary or work_notes or f"Resolved by Autonomous IT Service Desk ({resolution_code or 'Solution provided'})."
 
         req = urllib.request.Request(
             endpoint,

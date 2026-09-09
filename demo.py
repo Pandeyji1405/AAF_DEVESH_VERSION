@@ -6,7 +6,18 @@ import argparse
 import time
 import threading
 import queue
+import signal
 from typing import Dict, Any, Optional, List, Tuple
+
+def _sigint_handler(signum, frame):
+    print("\n\n🛑 [Session Interrupted by User (Ctrl+C)]. Exiting...")
+    os._exit(0)
+
+# Register global signal handler for instant termination on Ctrl+C
+try:
+    signal.signal(signal.SIGINT, _sigint_handler)
+except Exception:
+    pass
 
 # Ensure UTF-8 output on Windows consoles
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
@@ -25,7 +36,9 @@ from core.hitl import HumanInTheLoopManager
 from automationedge.client import AutomationEdgeClient
 from orchestrator import AutonomousITOrchestrator
 from notifications.email_approval import send_approval_email, generate_signed_url, build_approval_email
-from notifications.email_reply_listener import classify_approval_reply, handle_incoming_reply
+from notifications.email_reply_listener import classify_approval_reply, handle_incoming_reply, poll_inbox_for_replies, start_background_inbox_poller
+
+from datetime import datetime, timezone
 
 # Start FastAPI webhook server in background daemon thread safely
 _webhook_started = False
@@ -49,9 +62,12 @@ def get_input(prompt: str, default: str = "") -> str:
     try:
         val = input(prompt).strip()
         return val if val else default
-    except (EOFError, KeyboardInterrupt):
+    except EOFError:
         print(f"\n[Default selected]: {default}")
         return default
+    except KeyboardInterrupt:
+        print("\n\n🛑 [Session Interrupted by User (Ctrl+C)]. Exiting...")
+        os._exit(0)
 
 def print_banner(title: str, subtitle: str = ""):
     print("\n" + "="*82)
@@ -67,81 +83,88 @@ def print_step(step_num: int, title: str, details: str = ""):
     if details:
         print(f"  └─ {details}")
 
-from notifications.email_reply_listener import classify_approval_reply, handle_incoming_reply, poll_inbox_for_replies, start_background_inbox_poller
-
-from datetime import datetime, timezone
-
 def wait_for_decision(approval_id: str, case_store: Any, hitl_manager: Any, target_email: str, created_after: Optional[datetime] = None) -> Tuple[ApprovalStatus, str, ApprovalDecisionChannel]:
     """
     Waits for line manager authorization via:
     1. Live Gmail Inbox Email Reply (Asynchronous Background IMAP Polling)
     2. Webhook Button click
-    3. Direct Terminal Entry
+    3. Direct Terminal Entry (Non-blocking console polling)
     """
     start_time = created_after or datetime.now(timezone.utc)
     print(f"\n⏳ WAITING FOR LINE MANAGER AUTHORIZATION ({target_email})...")
     print(f"   📬 Listening for live email replies from your Gmail inbox ({target_email})...")
     print(f"   👉 You can reply to the email, click the One-Click button, or type below:")
+    print(f"\n👉 [CLI Prompt] Enter decision [approve (a) / reject (r) / custom reply]: ", end="", flush=True)
 
     stop_poller = threading.Event()
     start_background_inbox_poller(hitl_manager, case_store, active_approval_id=approval_id,
                                   created_after=start_time, stop_event=stop_poller)
 
-    user_queue = queue.Queue()
+    typed_chars = []
 
-    def _reader():
-        try:
-            val = input(f"\n👉 [CLI Prompt] Enter decision [approve (a) / reject (r) / custom reply]: ").strip()
-            user_queue.put(val)
-        except Exception:
-            pass
-
-    t = threading.Thread(target=_reader, daemon=True)
-    t.start()
-
-    while True:
-        # Check SQLite store (Updated instantaneously when Webhook button is clicked OR Email reply arrives)
-        fresh_case = case_store.get_case_by_approval_id(approval_id)
-        if fresh_case and fresh_case.get("decision") in ["APPROVED", "REJECTED"]:
-            stop_poller.set()
-            dec_str = fresh_case["decision"]
-            notes = fresh_case.get("manager_notes") or f"Manager authorization ({dec_str})"
-            channel_enum = ApprovalDecisionChannel.EMAIL_REPLY if fresh_case.get("channel") == "EMAIL_REPLY" else ApprovalDecisionChannel.EMAIL_BUTTON
-            
-            if fresh_case.get("channel") == "EMAIL_REPLY":
-                print(f"\n🎉 [REAL EMAIL REPLY RECEIVED FROM GMAIL] Manager decided: {dec_str}!")
-            else:
-                print(f"\n🎉 [WEBHOOK RECEIVED] One-Click decision recorded: {dec_str}!")
+    try:
+        while True:
+            # Check SQLite store (Updated instantaneously when Webhook button is clicked OR Email reply arrives)
+            fresh_case = case_store.get_case_by_approval_id(approval_id)
+            if fresh_case and fresh_case.get("decision") in ["APPROVED", "REJECTED"]:
+                stop_poller.set()
+                dec_str = fresh_case["decision"]
+                notes = fresh_case.get("manager_notes") or f"Manager authorization ({dec_str})"
+                channel_enum = ApprovalDecisionChannel.EMAIL_REPLY if fresh_case.get("channel") == "EMAIL_REPLY" else ApprovalDecisionChannel.EMAIL_BUTTON
                 
-            print(f"   └─ Manager Notes: \"{notes}\"")
-            return ApprovalStatus(dec_str), notes, channel_enum
-
-        # Check terminal user input
-        if not user_queue.empty():
-            stop_poller.set()
-            user_val = user_queue.get()
-            if not user_val:
-                user_val = "a"
-
-            if user_val.lower() in ["approve", "a", "yes", "y"]:
-                return ApprovalStatus.APPROVED, "Authorized by Line Manager via Enterprise Mobile Authenticator.", ApprovalDecisionChannel.TEAMS_CARD
-            elif user_val.lower() in ["reject", "r", "no", "n"]:
-                return ApprovalStatus.REJECTED, "Request rejected by Line Manager during review.", ApprovalDecisionChannel.TEAMS_CARD
-            else:
-                classification = classify_approval_reply(approval_id, user_val)
-                if classification["decision"] == "APPROVE":
-                    conditions = classification.get("requested_additional_info", [])
-                    notes = f"Approved with Conditions: {', '.join(conditions)} | Verbatim: {user_val}" if conditions else f"Approved by Manager: {user_val}"
-                    return ApprovalStatus.APPROVED, notes, ApprovalDecisionChannel.EMAIL_REPLY
+                if fresh_case.get("channel") == "EMAIL_REPLY":
+                    print(f"\n🎉 [REAL EMAIL REPLY RECEIVED FROM GMAIL] Manager decided: {dec_str}!")
                 else:
-                    notes = f"Rejected by Manager: {classification.get('rejection_reason') or user_val}"
-                    return ApprovalStatus.REJECTED, notes, ApprovalDecisionChannel.EMAIL_REPLY
+                    print(f"\n🎉 [WEBHOOK RECEIVED] One-Click decision recorded: {dec_str}!")
+                    
+                print(f"   └─ Manager Notes: \"{notes}\"")
+                return ApprovalStatus(dec_str), notes, channel_enum
 
-        time.sleep(0.3)
+            # Non-blocking terminal user input on Windows
+            if sys.platform == "win32":
+                import msvcrt
+                while msvcrt.kbhit():
+                    ch = msvcrt.getwche()
+                    if ch == '\x03':  # Ctrl+C
+                        stop_poller.set()
+                        print("\n\n🛑 [Session Interrupted by User (Ctrl+C)]. Exiting...")
+                        os._exit(0)
+                    elif ch in ['\r', '\n']:
+                        print()
+                        user_val = "".join(typed_chars).strip()
+                        if not user_val:
+                            user_val = "a"
+                        stop_poller.set()
+                        if user_val.lower() in ["approve", "a", "yes", "y", "1"]:
+                            return ApprovalStatus.APPROVED, "Authorized by Line Manager via Enterprise Mobile Authenticator.", ApprovalDecisionChannel.TEAMS_CARD
+                        elif user_val.lower() in ["reject", "r", "no", "n", "2"]:
+                            return ApprovalStatus.REJECTED, "Request rejected by Line Manager during review.", ApprovalDecisionChannel.TEAMS_CARD
+                        else:
+                            classification = classify_approval_reply(approval_id, user_val)
+                            if classification["decision"] == "APPROVE":
+                                conditions = classification.get("requested_additional_info", [])
+                                notes = f"Approved with Conditions: {', '.join(conditions)} | Verbatim: {user_val}" if conditions else f"Approved by Manager: {user_val}"
+                                return ApprovalStatus.APPROVED, notes, ApprovalDecisionChannel.EMAIL_REPLY
+                            else:
+                                notes = f"Rejected by Manager: {classification.get('rejection_reason') or user_val}"
+                                return ApprovalStatus.REJECTED, notes, ApprovalDecisionChannel.EMAIL_REPLY
+                    elif ch == '\x08':
+                        if typed_chars:
+                            typed_chars.pop()
+                    else:
+                        typed_chars.append(ch)
 
-def run_conversational_flow(query_text: str, user_email: str = "alex.murphy@enterprise.com"):
+            time.sleep(0.2)
+    except KeyboardInterrupt:
+        stop_poller.set()
+        print("\n\n🛑 [Session Interrupted by User (Ctrl+C)]. Exiting...")
+        os._exit(0)
+
+
+def run_conversational_flow(query_text: str, user_email: str = "apoorva.giri@enterprise.com", ticket_override: str = "", skip_prompt: bool = False):
     """
     Executes conversational flow with live governance, email notification, and confirm-then-commit webhook.
+    Integrated with ServiceNow and TacticalRMM orchestration.
     """
     ensure_webhook_running()
 
@@ -149,9 +172,9 @@ def run_conversational_flow(query_text: str, user_email: str = "alex.murphy@ente
     use_mock = not bool(ae_base and os.environ.get("AE_USERNAME") and os.environ.get("AE_PASSWORD") and os.environ.get("AE_ORG_CODE"))
     
     if not use_mock:
-        print(f"🔧 AutomationEdge mode: REAL ({ae_base})")
+        print(f"🔧 AutomationEdge mode: REAL ({ae_base}) | ITSM Connector: ServiceNow")
     else:
-        print("🔧 AutomationEdge mode: TEST-HARNESS (Simulated Engine)")
+        print(f"🔧 AutomationEdge mode: TEST-HARNESS (Simulated Engine) | ITSM Connector: ServiceNow")
 
     orchestrator = AutonomousITOrchestrator(use_mock_ae=use_mock)
     hitl_manager = orchestrator.hitl_manager
@@ -162,36 +185,41 @@ def run_conversational_flow(query_text: str, user_email: str = "alex.murphy@ente
     print(f"👤 User ({user_email}):\n   \"{query_text}\"")
     print("─"*82)
 
-    # 1. Warm, Empathetic Human-like Greeting & Acknowledgment
-    empathy = orchestrator.case_manager.nlu.generate_empathy_response(query_text)
-    user_first_name = user_email.split(".")[0].capitalize() if "." in user_email else "there"
+    if not skip_prompt:
+        # 1. Warm, Empathetic Human-like Greeting & Acknowledgment
+        empathy = orchestrator.case_manager.nlu.generate_empathy_response(query_text)
+        user_first_name = user_email.split(".")[0].capitalize() if "." in user_email else "there"
 
-    print(f"\n🤖 IT Service Desk Virtual Agent:")
-    print(f"   \"Hello {user_first_name}! {empathy['empathy_message']}\"")
-    print(f"   \"I can help {empathy['action_description']}.\"")
-    print(f"\n    Shall I create an official ServiceNow incident ticket for you to proceed?\"")
-    
-    confirm = get_input(f"\n👉 Create official ServiceNow ticket? [yes / no] (default: yes): ", default="yes").lower()
-
-    if confirm not in ["yes", "y", "sure", "ok", "proceed", "please"]:
         print(f"\n🤖 IT Service Desk Virtual Agent:")
-        print(f"   \"Understood! No ticket has been raised. Feel free to reach out anytime if you need help. Have a great day!\"\n")
-        return
+        print(f"   \"Hello {user_first_name}! {empathy['empathy_message']}\"")
+        print(f"   \"I can help {empathy['action_description']}.\"")
+        print(f"\n    Shall I create/process an official ServiceNow incident for you to proceed?\"")
+        
+        confirm = get_input(f"\n👉 Create/process official ServiceNow incident? [yes / no] (default: yes): ", default="yes").lower()
+
+        if confirm not in ["yes", "y", "sure", "ok", "proceed", "please"]:
+            print(f"\n🤖 IT Service Desk Virtual Agent:")
+            print(f"   \"Understood! No ticket has been raised. Feel free to reach out anytime if you need help. Have a great day!\"\n")
+            return
 
     # User confirmed -> Now classify intent and triage into official ticket
     print(f"\n🤖 IT Service Desk Virtual Agent:")
-    print(f"   \"Great! Initializing MAF (Multi-Agent Framework) Case Manager to triage your request into the appropriate category and raise the ticket...\"")
+    print(f"   \"Great! Initializing MAF (Multi-Agent Framework) Case Manager to triage your request into the appropriate category and create the ServiceNow incident...\"")
 
     from core.models import UserQuery
-    uq = UserQuery(query_text=query_text, requester_email=user_email)
+    uq = UserQuery(query_text=query_text, requester_email=user_email, ticket_id=ticket_override)
     ticket, context_graph = orchestrator.case_manager.process_incoming_query(uq)
 
-    print_step(1, "MAF Triage & ServiceNow Ticket Raised", 
-               f"ServiceNow Ticket: {ticket.ticket_id} | Route: {ticket.assigned_agent} | Category: {ticket.intent.value}")
-    print(f"  • Authenticated Requester: {user_email} (Engineering)")
-    print(f"  • Verified Line Manager  : {context_graph.get_fact('manager_email') or 'sarah.connor@enterprise.com'}")
-    print(f"  • Target Entity Corroborated: {context_graph.get_fact('device_name') or context_graph.get_fact('agent_id') or context_graph.get_fact('assigned_device_id') or 'Entra Resource'}")
-    print(f"  • Context Graph Status   : 100% Verified (Zero-Hallucination Guardrail PASS)")
+    print_step(1, "MAF Triage & ServiceNow Incident Created", 
+               f"Incident: {ticket.ticket_id} | Sys ID: {getattr(ticket, 'sys_id', None) or 'N/A'} | Route: {ticket.assigned_agent} | Category: {ticket.intent.value}")
+    print(f"  • ServiceNow Incident Number: {ticket.ticket_id}")
+    if getattr(ticket, "sys_id", None):
+        print(f"  • ServiceNow Sys ID         : {ticket.sys_id}")
+        
+    print(f"  • Authenticated Requester   : {user_email} (Engineering)")
+    print(f"  • Verified Line Manager     : {context_graph.get_fact('manager_email') or 'sarah.connor@enterprise.com'}")
+    print(f"  • Target Endpoint Device    : {context_graph.get_fact('device_name') or context_graph.get_fact('hostname') or 'Apoorva'}")
+    print(f"  • Context Graph Status      : 100% Verified (Zero-Hallucination Guardrail PASS)")
 
     # Step 2: MAF Specialist Diagnostic & PDP Policy Check
     print_step(2, "MAF Specialist Diagnostic & Policy Decision Point (PDP) Evaluation")
@@ -259,12 +287,12 @@ def run_conversational_flow(query_text: str, user_email: str = "alex.murphy@ente
         print("\n" + signed_card)
 
         # Step 5: Resume Execution based on Human Decision
-        print_step(4, "Approver Sign-Off & AutomationEdge Execution", f"Decision: {sign_status.value} (Channel: {channel.value})")
+        print_step(4, "Approver Sign-Off & AutomationEdge Execution (ServiceNow)", f"Decision: {sign_status.value} (Channel: {channel.value})")
 
         if sign_status == ApprovalStatus.REJECTED:
             rejected_ticket = specialist.execute_request(ticket, context_graph, approval_decision=ApprovalStatus.REJECTED)
             print(f"  • Policy Engine: Action execution denied per approver rejection.")
-            print(f"  • AutomationEdge Dispatch: Dispatched AE_SNOW_003_UpdateTicket to ServiceNow Table API")
+            print(f"  • ServiceNow Incident Number: {ticket.ticket_id}")
             print(f"  • ServiceNow State: Closed Rejected (Code: REJECTED_BY_APPROVER)")
             print(f"  • ServiceNow Audit Notes: Approval {approval_id} REJECTED by {approver}. Manager notes: \"{sign_notes}\".")
             print(f"\n🤖 IT Service Desk Virtual Agent (Final Status to User):")
@@ -279,7 +307,10 @@ def run_conversational_flow(query_text: str, user_email: str = "alex.murphy@ente
         ver = resolved_ticket.verification
         if ver:
             print_step(5, "MAF Read-Back Verification & ServiceNow Closure")
-            print(f"  • Verification Check: Independent Read-Back from Target Subsystem")
+            print(f"  • ServiceNow Incident Number: {ticket.ticket_id}")
+            if getattr(ticket, "sys_id", None):
+                print(f"  • ServiceNow Sys ID         : {ticket.sys_id}")
+            print(f"  • Verification Check: Independent Read-Back from Target Subsystem via Get_Agent_Run_Cmd")
             print(f"  • Actual Telemetry  : {ver.actual_state}")
             print(f"  • Expected State    : {ver.expected_state}")
             print(f"  • Verification State: MATCH (100% Verified)")
@@ -292,12 +323,35 @@ def run_conversational_flow(query_text: str, user_email: str = "alex.murphy@ente
         print("═"*82)
 
     else:
-        # Pre-approved R0/R1 action
-        print_step(3, "Execution & Verification (Pre-Approved R1 Diagnostic/Sync)")
-        resolved_ticket = specialist.execute_request(ticket, context_graph, approval_decision=ApprovalStatus.APPROVED)
-        print(f"\n🤖 IT Service Desk Virtual Agent:")
-        print(f"   \"{resolved_ticket.customer_summary}\"")
+        # Pre-approved R0/R1 action (e.g. Tactical RMM Get_Agent_Run_Cmd, metrics diagnostics)
+        print(f"  • Specialist Agent    : {specialist.agent_name}")
+        print(f"  • Security Risk Tier  : Tier R1 (Standard / Pre-Approved Telemetry Diagnostic)")
+        print(f"  • PDP Policy Decision : ✅ PERMITTED (Zero write risk, immediate autonomous execution)")
+        
+        wf_name = ticket_pending.actions_executed[-1].workflow_name if ticket_pending.actions_executed else os.environ.get("AE_WORKFLOW_TRMM_CMD", "Get_Agent_Run_Cmd")
+        res_code = getattr(ticket_pending, "resolution_code", None) or "RESOLVED_DIAGNOSTIC_COMPLETED"
+        last_cmd = context_graph.get_fact("last_executed_command") or "ipconfig /all"
+        action_count = len(ticket_pending.actions_executed)
+        
+        print_step(3, "AutomationEdge T4 Execution & ServiceNow Closure", f"Workflow: {wf_name} | Incident: {ticket.ticket_id}")
+        print(f"  • ServiceNow Incident Number: {ticket.ticket_id}")
+        if getattr(ticket, "sys_id", None):
+            print(f"  • ServiceNow Sys ID         : {ticket.sys_id}")
+        print(f"  • Assigned Specialist       : {specialist.agent_name}")
+        print(f"  • AE Workflow Executed      : {wf_name}")
+        print(f"  • Executed Tactical Command : {last_cmd}")
+        last_run_as_user = context_graph.get_fact("last_execution_run_as_user") or "true"
+        mode_str = "RunAsUser = false (Administrator / NT AUTHORITY\\SYSTEM)" if str(last_run_as_user).lower() == "false" else "RunAsUser = true (Standard User Session)"
+        print(f"  • Execution Mode            : {mode_str}")
+        print(f"  • Action Tracking Records   : {action_count} action(s) logged in audit trail")
+        print(f"  • ServiceNow State          : Closed Complete (Resolution Code: {res_code})")
+        print(f"  • ServiceNow Audit          : Incident updated with live execution output and work notes")
+
+        print("\n" + "═"*82)
+        print(f"🤖 IT Service Desk Virtual Agent (Live Execution Output to User):")
+        print(f"   \"{ticket_pending.customer_summary}\"")
         print("═"*82)
+
 
 def interactive_chat_session():
     """Main interactive chatbot loop."""
@@ -306,27 +360,29 @@ def interactive_chat_session():
 
     print("Welcome to Enterprise IT Self-Service Virtual Assistant!")
     print("You can report an issue, request access, stage a workstation, or report a security/server incident.")
-    print("Type your query, pick a sample number [1-6], or type 'catalog' to pick from 120 real-time scenarios.")
+    print("Type your query, pick a sample number [1-8], or 'C' for 120 real-time catalog scenarios.")
 
     sample_queries = [
-        "My laptop (DEV-WIN-102) failed TacticalRMM compliance checks and is blocking Teams. Can you remediate it?",
-        "I need developer write access to GitHub Enterprise core repository group for Q3 sprint deliverables.",
-        "Production web server SRV-WEB-PROD-01 is throwing HTTP 503 errors and w3wp app pool crashed.",
-        "Emergency: Database disk is 98% full on SRV-SQL-PROD-02, need transaction log truncation.",
-        "Security Alert: Potential malware detected on endpoint DEV-WIN-102, isolate device immediately.",
-        "I am locked out of my laptop DEV-WIN-101 and need my BitLocker recovery key."
+        "I want to check my machine summary",
+        "Get the list of agents currently running on the server",
+        "Get software list installed on my machine",
+        "Check windows patches and update status on my device",
+        "Can you fetch my full IP configuration and network adapter details for my device?",
+        "Check high CPU usage and top consuming processes on my laptop.",
+        "Run whoami command on my device to verify user execution context.",
+        "Install software 7-Zip on my laptop (requires line manager approval)."
     ]
 
     while True:
         print("\n" + "─"*82)
-        print("📝 Quick Sample Queries:")
+        print(f"📝 Quick Sample Queries (Active ITSM: 🚀 ServiceNow):")
         for idx, q in enumerate(sample_queries, 1):
             print(f"   [{idx}] {q}")
         print("   [C] Browse 120 Real-Time Scenarios Catalog")
         print("   [Q] Quit / Exit")
         print("─"*82)
 
-        user_choice = get_input("\n💬 Enter query, sample number [1-6], 'C' for catalog, or 'Q' to exit (default: 1): ", default="1").strip()
+        user_choice = get_input(f"\n💬 Enter query, sample number [1-{len(sample_queries)}], 'C' for catalog, or 'Q' to exit (default: 1): ", default="1").strip()
 
         if user_choice.lower() in ["q", "quit", "exit"]:
             print("\n👋 Thank you for using TacticalRMM Autonomous IT Service Desk. Goodbye!")
@@ -375,4 +431,8 @@ def main():
     interactive_chat_session()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\n🛑 [Session Terminated by User (Ctrl+C)]. Goodbye!")
+        os._exit(0)

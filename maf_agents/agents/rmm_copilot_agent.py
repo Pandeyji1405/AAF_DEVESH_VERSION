@@ -1,11 +1,11 @@
 from typing import Optional, Dict, Any
 from agent_framework import Agent
-from core.models import IncidentTicket, ApprovalStatus, RiskTier
+from core.models import IncidentTicket, ApprovalStatus, RiskTier, ProposedAction
 from core.context_graph import ContextGraph
 from core.base_agent import BaseAgent
 
 from maf_agents.tools.ops_tools import create_ops_tools
-from maf_agents.tools.servicenow_tools import create_servicenow_tools
+from maf_agents.tools.itsm_tools import create_itsm_tools
 from maf_agents.client_factory import get_maf_chat_client
 
 class MAFRMMCopilotAgent(BaseAgent):
@@ -17,7 +17,8 @@ class MAFRMMCopilotAgent(BaseAgent):
     def __init__(self, ae_client, policy_engine, hitl_manager):
         super().__init__("MAF_RMM_Copilot_Agent", ae_client, policy_engine, hitl_manager)
         self.ops_tools = {t.name: t for t in create_ops_tools(ae_client)}
-        self.snow_tools = {t.name: t for t in create_servicenow_tools(ae_client)}
+        self.snow_tools = {t.name: t for t in create_itsm_tools(ae_client)}
+        self.itsm_tools = self.snow_tools
 
         self.maf_agent = Agent(
             client=get_maf_chat_client(),
@@ -65,7 +66,7 @@ class MAFRMMCopilotAgent(BaseAgent):
 
         if approval_record.status == ApprovalStatus.APPROVED:
             context_graph.validate_action_parameters(workflow_name, params)
-            app_dict = approval_record.dict() if hasattr(approval_record, "dict") else approval_record.model_dump()
+            app_dict = approval_record.model_dump() if hasattr(approval_record, "model_dump") else approval_record.dict()
             decision = self.policy_engine.evaluate(workflow_name, params, app_dict)
             if decision["decision"] == "DENY":
                 raise PermissionError(f"PDP denied {workflow_name}: {decision.get('reason')}")
@@ -81,10 +82,33 @@ class MAFRMMCopilotAgent(BaseAgent):
                 expected_state={"batch_status": "COMPLETED"},
                 keys_to_compare=["batch_status"]
             )
+            action_id = f"ACT-FLEET-{len(ticket.actions_executed) + 1:03d}"
+            ticket.actions_executed.append(ProposedAction(
+                action_id=action_id,
+                workflow_name=workflow_name,
+                risk_tier=RiskTier.R2,
+                target_entity=target_str,
+                parameters={"script_name": script_name, "target_agent_ids": target_str, "batch_id": batch_id},
+                reason=f"Batch execution of script '{script_name}' on {len(target_nodes)} fleet endpoints"
+            ))
+            context_graph.add_fact("last_executed_script", script_name, source="TACTICAL_RMM")
+            context_graph.add_fact("batch_id", batch_id, source="TACTICAL_RMM")
             ticket.verification = verification
             ticket.status = "RESOLVED"
-            ticket.customer_summary = f"RMM Copilot successfully executed '{script_name}' across {len(target_nodes)} nodes ({target_str}). Success rate: 100%."
-            self.snow_tools["update_incident"](ticket_id=ticket.ticket_id, state="Closed Complete", resolution_code="BATCH_EXECUTED", work_notes=f"Batch {batch_id} complete on {target_str}", customer_summary=ticket.customer_summary)
+            ticket.customer_summary = (
+                f"RMM Copilot successfully executed script '{script_name}' across {len(target_nodes)} nodes ({target_str}). Success rate: 100%.\n\n"
+                f"💻 [Executed Script]: `{script_name}` (Batch ID: {batch_id})"
+            )
+            ticket.work_notes.append(
+                f"[TACTICAL RMM FLEET EXECUTION RECORD]\n"
+                f"• Target Fleet Nodes: {target_str}\n"
+                f"• Workflow: AE_Batch_Script_Runner_Workflow\n"
+                f"• Script Name: {script_name}\n"
+                f"• Batch ID: {batch_id}\n"
+                f"• Approval ID: {approval_record.approval_id}\n"
+                f"• Status: COMPLETED (100% Verified)"
+            )
+            self.snow_tools["update_incident"](ticket_id=ticket.ticket_id, state="Closed Complete", resolution_code="BATCH_EXECUTED", work_notes="\n".join(ticket.work_notes), customer_summary=ticket.customer_summary)
         elif approval_record.status == ApprovalStatus.REJECTED:
             ticket.status = "CLOSED_REJECTED"
             ticket.customer_summary = f"Batch fleet operation was rejected by IT Director ({manager_email})."

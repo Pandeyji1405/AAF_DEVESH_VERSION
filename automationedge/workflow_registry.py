@@ -700,5 +700,128 @@ AE_WORKFLOW_REGISTRY: Dict[str, WorkflowSpec] = {
         input_fields=["subject", "html_body", "recipient"],
         output_fields=["send_status", "message_id", "sent_at"],
         read_only=False
+    ),
+
+    # ── TACTICAL RMM WORKFLOWS (AE T4 / NGROK GATEWAY) ──
+    "Get_Agent_Run_Cmd": WorkflowSpec(
+        workflow_name="Get_Agent_Run_Cmd",
+        description="Executes IP config and PowerShell command diagnostics via Tactical RMM on endpoint running as logged-in user.",
+        target_system="Tactical RMM / AutomationEdge T4",
+        risk_tier="R1",
+        input_fields=["P_TacticalToken", "P_NgrokURL", "P_Hostname", "P_Command", "P_RunAsUser", "P_Shell", "P_Timeout"],
+        output_fields=["workflowResponse", "status", "output", "exit_code"],
+        read_only=False
+    ),
+    "TRMM_Run_IP_Config": WorkflowSpec(
+        workflow_name="TRMM_Run_IP_Config",
+        description="Alias for Get_Agent_Run_Cmd.",
+        target_system="Tactical RMM / AutomationEdge T4",
+        risk_tier="R1",
+        input_fields=["P_TacticalToken", "P_NgrokURL", "P_Hostname", "P_Command", "P_RunAsUser", "P_Shell", "P_Timeout"],
+        output_fields=["workflowResponse", "status", "output", "exit_code"],
+        read_only=False
+    ),
+    "TRMM_Execute_Command": WorkflowSpec(
+        workflow_name="TRMM_Execute_Command",
+        description="Executes a PowerShell or shell command on target Tactical RMM agent via AutomationEdge T4.",
+        target_system="Tactical RMM / AutomationEdge T4",
+        risk_tier="R1",
+        input_fields=["P_TacticalToken", "P_NgrokURL", "P_Hostname", "P_Command", "P_RunAsUser", "P_Shell", "P_Timeout"],
+        output_fields=["workflowResponse", "status", "output", "exit_code"],
+        read_only=False
+    ),
+    "AE_SEC_001_IsolateHost": WorkflowSpec(
+        workflow_name="AE_SEC_001_IsolateHost",
+        description="Isolates infected host from enterprise network while preserving Tactical RMM control plane.",
+        target_system="EDR / TacticalRMM",
+        risk_tier="R3",
+        input_fields=["agent_id", "reason", "ticket_id"],
+        output_fields=["isolation_state", "isolation_id"],
+        read_only=False
+    ),
+    "AE_SEC_002_CaptureMemoryForensics": WorkflowSpec(
+        workflow_name="AE_SEC_002_CaptureMemoryForensics",
+        description="Captures live memory triage and volatile processes from target endpoint.",
+        target_system="Forensics Agent / TacticalRMM",
+        risk_tier="R2",
+        input_fields=["agent_id", "case_id", "ticket_id"],
+        output_fields=["forensics_status", "dump_path"],
+        read_only=False
+    ),
+    "AE_ONB_001_DeployPackageBundle": WorkflowSpec(
+        workflow_name="AE_ONB_001_DeployPackageBundle",
+        description="Deploys standardized corporate application package bundle for new hire onboarding.",
+        target_system="TacticalRMM / Intune",
+        risk_tier="R2",
+        input_fields=["device_id", "user_email", "bundle_id", "ticket_id"],
+        output_fields=["deployment_status", "bundle_id", "installed_packages"],
+        read_only=False
+    ),
+    "AE_ONB_002_ApplySecurityBaseline": WorkflowSpec(
+        workflow_name="AE_ONB_002_ApplySecurityBaseline",
+        description="Applies CIS/NIST corporate security baseline configuration on provisioned workstation.",
+        target_system="TacticalRMM / GPO Engine",
+        risk_tier="R2",
+        input_fields=["device_id", "baseline_name", "ticket_id"],
+        output_fields=["baseline_status", "applied_policies"],
+        read_only=False
+    ),
+    "AE_Execute_Fleet_Batch_Script": WorkflowSpec(
+        workflow_name="AE_Execute_Fleet_Batch_Script",
+        description="Executes cross-fleet batch script across multiple endpoints.",
+        target_system="TacticalRMM Fleet Engine",
+        risk_tier="R2",
+        input_fields=["target_agent_ids", "script_name", "ticket_id"],
+        output_fields=["batch_id", "batch_status", "target_count"],
+        read_only=False
+    ),
+    "Get_Agents_List": WorkflowSpec(
+        workflow_name="Get_Agents_List",
+        description="Get the list of agents currently running on the Tactical RMM server.",
+        target_system="Tactical RMM / AutomationEdge T4",
+        risk_tier="R0",
+        input_fields=["P_TacticalToken", "P_NgrokURL"],
+        output_fields=["workflowResponse", "status", "agents", "agent_count"],
+        read_only=True
+    ),
+    "Get_Machine_Summary": WorkflowSpec(
+        workflow_name="Get_Machine_Summary",
+        description="Get the system and hardware summary for the respective agent's machine.",
+        target_system="Tactical RMM / AutomationEdge T4",
+        risk_tier="R0",
+        input_fields=["P_TacticalToken", "P_NgrokURL", "P_Hostname"],
+        output_fields=["workflowResponse", "status", "summary", "hostname", "os", "cpu", "ram", "disk"],
+        read_only=True
+    ),
+    "Software_Installation": WorkflowSpec(
+        workflow_name="Software_Installation",
+        description="Install the required software on the agent machine via Tactical RMM (Administrator SYSTEM context).",
+        target_system="Tactical RMM / AutomationEdge T4",
+        risk_tier="R2",
+        input_fields=["P_TacticalToken", "P_NgrokURL", "P_Hostname", "P_SoftwareName"],
+        output_fields=["workflowResponse", "status", "install_status", "software_name", "output"],
+        read_only=False
+    ),
+    "Get_Software_List": WorkflowSpec(
+        workflow_name="Get_Software_List",
+        description="Get the list of installed software from the agent machine via Tactical RMM.",
+        target_system="Tactical RMM / AutomationEdge T4",
+        risk_tier="R0",
+        input_fields=["P_TacticalToken", "P_NgrokURL", "P_Hostname"],
+        output_fields=["workflowResponse", "status", "installed_software", "software_count"],
+        read_only=True
+    ),
+    "Get_Windows_Patches": WorkflowSpec(
+        workflow_name="Get_Windows_Patches",
+        description="List of windows updates and patch status for the respective agent machine via Tactical RMM.",
+        target_system="Tactical RMM / AutomationEdge T4",
+        risk_tier="R0",
+        input_fields=["P_TacticalToken", "P_NgrokURL", "P_Hostname"],
+        output_fields=["workflowResponse", "status", "patches", "pending_patches_count", "installed_patches_count"],
+        read_only=True
     )
 }
+
+
+
+

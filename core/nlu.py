@@ -85,6 +85,62 @@ class NaturalLanguageUnderstander:
                 "proposed_solution": "Verify warranty status in enterprise CMDB and dispatch approved replacement hardware via FedEx Express."
             }
 
+        # ── Tactical RMM AutomationEdge T4 Workflows ──
+        if any(k in text for k in [
+            "machine summary", "system summary", "hardware summary", "pc summary", "laptop summary",
+            "device summary", "machine details", "system details", "specs", "check my machine", "summary of my machine",
+            "my machine summary", "get machine summary"
+        ]):
+            return {
+                "intent": IntentCategory.DEVICE,
+                "domain_name": "TacticalRMM Machine & Hardware Telemetry",
+                "detected_issue": "Retrieve Comprehensive Machine & Hardware Summary",
+                "proposed_solution": "Execute AutomationEdge workflow 'Get_Machine_Summary' via Tactical RMM to fetch hardware, OS, CPU, RAM, and disk metrics."
+            }
+
+        if any(k in text for k in [
+            "agents list", "get agents list", "list agents", "connected agents", "running agents", "tactical agents", "online agents", "all agents"
+        ]):
+            return {
+                "intent": IntentCategory.DEVICE,
+                "domain_name": "TacticalRMM Agent Fleet Management",
+                "detected_issue": "Query Active Tactical RMM Connected Agents Fleet",
+                "proposed_solution": "Execute AutomationEdge workflow 'Get_Agents_List' to retrieve all active endpoints connected to Tactical RMM."
+            }
+
+        if any(k in text for k in [
+            "software list", "get software list", "installed software", "installed applications", "installed apps",
+            "what software is installed", "programs installed", "app inventory", "installed program"
+        ]):
+            return {
+                "intent": IntentCategory.DEVICE,
+                "domain_name": "TacticalRMM Software Inventory Audit",
+                "detected_issue": "Audit Installed Applications and Software Packages",
+                "proposed_solution": "Execute AutomationEdge workflow 'Get_Software_List' on endpoint via Tactical RMM."
+            }
+
+        if any(k in text for k in [
+            "windows patches", "get windows patches", "patch status", "check windows updates", "pending patches",
+            "updates list", "windows update status", "missing patches"
+        ]):
+            return {
+                "intent": IntentCategory.DEVICE,
+                "domain_name": "TacticalRMM Windows Patch & Update Compliance",
+                "detected_issue": "Audit Windows Update Status & Pending Security Patches",
+                "proposed_solution": "Execute AutomationEdge workflow 'Get_Windows_Patches' on endpoint via Tactical RMM."
+            }
+
+        if any(k in text for k in [
+            "install software", "software installation", "install 7-zip", "install vlc", "install chrome",
+            "install app", "install adobe", "adobe reader", "install package", "install program", "install application", "software install"
+        ]):
+            return {
+                "intent": IntentCategory.DEVICE,
+                "domain_name": "TacticalRMM Automated Software Deployment",
+                "detected_issue": "Deploy Enterprise Software Package to Endpoint",
+                "proposed_solution": "Request line manager approval and execute AutomationEdge workflow 'Software_Installation' via Tactical RMM under Administrator (SYSTEM) context."
+            }
+
         # ── Device / TacticalRMM patterns ──
         if any(k in text for k in ["bitlocker", "recovery key", "blue screen", "bsod"]):
             return {
@@ -124,6 +180,27 @@ class NaturalLanguageUnderstander:
                 "domain_name": "TacticalRMM Endpoint Management",
                 "detected_issue": "Unresponsive Endpoint Requiring Remote Restart",
                 "proposed_solution": "Dispatch remote restart script execution via TacticalRMM."
+            }
+
+        if any(k in text for k in [
+            "ip config", "ipconfig", "ip detail", "ip details", "ip address", "network adapter",
+            "pc config", "pc configuration", "my pc", "device config", "device configuration",
+            "system config", "system configuration", "laptop config", "laptop configuration",
+            "get my pc", "pc details", "device details", "show my ip", "show ip"
+        ]):
+            return {
+                "intent": IntentCategory.DEVICE,
+                "domain_name": "TacticalRMM PC & Network Configuration",
+                "detected_issue": "Query Endpoint PC Telemetry & IP/Adapter Configuration",
+                "proposed_solution": "Execute configuration workflow (Get_Agent_Run_Cmd) via Tactical RMM on endpoint running as user."
+            }
+
+        if any(k in text for k in ["cpu", "high cpu", "cpu usage", "spike", "top process", "heavy process", "whoami"]):
+            return {
+                "intent": IntentCategory.DEVICE,
+                "domain_name": "TacticalRMM Process & Telemetry Diagnostics",
+                "detected_issue": "High CPU Consumption & Active Process Analysis",
+                "proposed_solution": "Execute live process telemetry diagnostics via Tactical RMM workflow on endpoint running as user."
             }
 
         if any(k in text for k in ["compliance", "non-compliant", "compliant", "baseline", "teams", "outlook"]):
